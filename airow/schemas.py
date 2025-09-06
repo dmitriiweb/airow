@@ -1,3 +1,5 @@
+"""Data structures for declaring model outputs."""
+
 from dataclasses import dataclass
 from typing import Any, Type
 

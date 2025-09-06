@@ -1,3 +1,5 @@
+"""High-level API to run LLMs over DataFrame rows in batches."""
+
 import asyncio
 from typing import Iterable
 
@@ -10,6 +12,10 @@ from .agent import AirowAgent
 
 
 class Airow:
+    """Apply an LLM to each row of a DataFrame and write results.
+
+    Uses `AirowAgent` internally and supports parallel row processing per batch.
+    """
     def __init__(
         self,
         *,
@@ -17,6 +23,13 @@ class Airow:
         system_prompt: str,
         batch_size: int = 1,
     ):
+        """Configure the runner.
+
+        Args:
+            model: The pydantic-ai model to use.
+            system_prompt: System prompt applied to each request.
+            batch_size: Number of DataFrame rows to process concurrently.
+        """
         self.model = model
         self.system_prompt = system_prompt
         self.batch_size = batch_size
@@ -31,6 +44,22 @@ class Airow:
         output_columns: schemas.OutputColumn | Iterable[schemas.OutputColumn],
         show_progress: bool = False,
     ) -> pd.DataFrame:
+        """Run the model across the DataFrame and return results.
+
+        For each row, the values from `input_columns` are appended to `prompt`
+        as labeled lines and the model is asked to produce `output_columns`.
+        Results are written into the original DataFrame.
+
+        Args:
+            df: Input DataFrame.
+            prompt: Base prompt text provided to the model.
+            input_columns: Columns whose values are passed as context to the model.
+            output_columns: One or more output column specifications.
+            show_progress: Whether to display a progress bar.
+
+        Returns:
+            The input DataFrame with new output columns populated.
+        """
         if isinstance(output_columns, schemas.OutputColumn):
             output_columns = [output_columns]
 
