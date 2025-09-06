@@ -7,3 +7,7 @@ format:
 lint:
 	ruff check airow
 	mypy airow
+
+.PHONY: tests
+tests:
+	pytest --cov=airow -vv tests/

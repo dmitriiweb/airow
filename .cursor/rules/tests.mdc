@@ -1,0 +1,10 @@
+---
+globs: tests/*.*
+alwaysApply: false
+---
+## Use this rules when writting the tests
+
+- Use pytest
+- Do not mark tests as @async, because there is pytest option in pyproject.toml asyncio_mode="auto"
+- Do not create test classes, one test - one function
+- run tests with `pytest --cov=airow -vv tests/`
