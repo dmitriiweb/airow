@@ -20,7 +20,6 @@ class AirowAgent:
 
     async def run(
         self,
-        input_data: dict[str, object],
         prompt: str,
         output_columns: Iterable[schemas.OutputColumn],
     ) -> dict[str, object]:

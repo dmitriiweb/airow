@@ -134,6 +134,7 @@ dependencies = [
     { name = "pandas" },
     { name = "pydantic" },
     { name = "pydantic-ai" },
+    { name = "tqdm" },
 ]
 
 [package.optional-dependencies]
@@ -155,6 +156,7 @@ requires-dist = [
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=1.1.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=6.3.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.12.12" },
+    { name = "tqdm", specifier = ">=4.67.1" },
 ]
 provides-extras = ["dev"]
 
