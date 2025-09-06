@@ -24,7 +24,8 @@ class AirowAgent:
         output_columns: Iterable[schemas.OutputColumn],
     ) -> dict[str, object]:
         output_columns_fields = self.build_agent_output_type(output_columns)
-        return output_columns_fields.model_dump()
+        result = await self.agent.run(prompt, output_type=output_columns_fields)
+        return result.output.model_dump()
 
     def build_agent_output_type(
         self,
