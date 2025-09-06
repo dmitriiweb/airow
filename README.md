@@ -69,17 +69,6 @@ async def main():
     
     print(result_df.head())
 
-asyncio.run(main())
-```
-
-
-```python
-# Extract multiple pieces of information
-
-result_df = await airow.run(
-    df,
-    prompt="Analyze the sentiment and extract keywords",
-    input_columns=["text"],
-    output_columns=output_columns,
-)
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
