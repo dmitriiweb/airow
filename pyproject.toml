@@ -1,9 +1,35 @@
 [project]
 name = "airow"
 dynamic = ["version"]
-description = "Add your description here"
+description = "AI-powered DataFrame processing made simple"
 readme = "README.md"
+license = {text = "MIT"}
 requires-python = ">=3.10"
+authors = [
+    {name = "Dmitrii K", email = "dmitriik@protonmail.com"},
+]
+maintainers = [
+    {name = "Dmitrii K", email = "dmitriik@protonmail.com"},
+]
+keywords = ["ai", "ai-agent", "dataframe", "pandas", "pydantic-ai", "async", "data-processing"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Text Processing",
+    "Topic :: Database",
+    "Typing :: Typed",
+]
 dependencies = [
     "loguru>=0.7.3",
     "pandas>=2.3.2",
@@ -11,6 +37,12 @@ dependencies = [
     "pydantic-ai>=0.8.1",
     "tqdm>=4.67.1",
 ]
+
+[project.urls]
+Homepage = "https://github.com/dmitriiweb/airow"
+Repository = "https://github.com/dmitriiweb/airow"
+Documentation = "https://github.com/dmitriiweb/airow"
+"Bug Tracker" = "https://github.com/dmitriiweb/airow/issues"
 
 [project.optional-dependencies]
 dev = [

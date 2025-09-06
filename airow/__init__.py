@@ -1,4 +1,4 @@
-__version__ = "0.1.0a"
+__version__ = "0.1.0a1"
 
 from .airow import Airow
 from .schemas import OutputColumn
