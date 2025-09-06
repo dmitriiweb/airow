@@ -61,7 +61,7 @@ async def main():
     # Process with AI
     result_df = await airow.run(
         df,
-        prompt="Extract taste characteristics from the wine description",
+        prompt="Analyze the wine description and provide sentiment analysis, confidence score, and extract key terms.",
         input_columns=["description"],
         output_columns=output_columns,
         show_progress=True,
