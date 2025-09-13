@@ -14,7 +14,7 @@ class AirowAgent:
     """Wrapper around `pydantic_ai.Agent` that builds structured output models."""
     def __init__(
         self,
-        model: Model,
+        model: Model | str,
         system_prompt: str,
         retries: int = 3,
     ):
