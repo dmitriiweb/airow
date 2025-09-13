@@ -42,6 +42,9 @@ async def main():
         model_name="llama3.2:latest",
         provider=OllamaProvider(base_url="http://localhost:11434/v1"),
     )
+    # or use strings:
+    model = "openai:gpt-5"
+    model = "anthropic:claude-sonnet-4-0"
     
     # Create Airow instance
     airow = Airow(

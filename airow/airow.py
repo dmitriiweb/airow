@@ -19,9 +19,10 @@ class Airow:
     def __init__(
         self,
         *,
-        model: Model,
+        model: Model | str,
         system_prompt: str,
         batch_size: int = 1,
+        retries: int = 3,
     ):
         """Configure the runner.
 
@@ -29,11 +30,12 @@ class Airow:
             model: The pydantic-ai model to use.
             system_prompt: System prompt applied to each request.
             batch_size: Number of DataFrame rows to process concurrently.
+            retries: Number of retries for a run.
         """
         self.model = model
         self.system_prompt = system_prompt
         self.batch_size = batch_size
-        self.agent = AirowAgent(self.model, self.system_prompt)
+        self.agent = AirowAgent(self.model, self.system_prompt, retries)
 
     async def run(
         self,
@@ -66,6 +68,9 @@ class Airow:
         # Convert to list for easier handling
         input_columns = list(input_columns)
 
+        # Work with a copy to avoid SettingWithCopyWarning
+        df = df.copy()
+
         # Split dataframe into batches
         total_rows = df.shape[0]
         batche_ranges = [
@@ -79,15 +84,19 @@ class Airow:
             # Process each row in the batch in parallel
             tasks = []
             row_indices = []
-            batch = df.iloc[batch_range[0] : batch_range[1]]
-
-            for idx, row in batch.iterrows():
+            
+            # Get row indices for this batch
+            start_idx = batch_range[0]
+            end_idx = min(batch_range[1], total_rows)
+            
+            for row_idx in range(start_idx, end_idx):
+                row = df.iloc[row_idx]
                 input_data = {col: row[col] for col in input_columns}
                 input_data_str = "\n".join([f"Column: {k}, Value: {v}" for k, v in input_data.items()])
-                prompt = f"{prompt}\n\n{input_data_str}"
-                task = self.agent.run(prompt, output_columns)
+                full_prompt = f"{prompt}\n\n{input_data_str}"
+                task = self.agent.run(full_prompt, output_columns)
                 tasks.append(task)
-                row_indices.append(idx)
+                row_indices.append(row_idx)
 
             # Run all tasks in parallel
             results = await asyncio.gather(*tasks)
