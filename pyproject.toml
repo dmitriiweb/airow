@@ -13,7 +13,7 @@ maintainers = [
 ]
 keywords = ["ai", "ai-agent", "dataframe", "pandas", "pydantic-ai", "async", "data-processing"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
