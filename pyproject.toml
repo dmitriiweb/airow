@@ -32,7 +32,6 @@ classifiers = [
 ]
 dependencies = [
     "loguru>=0.7.3",
-    "pandas>=2.3.2",
     "pydantic>=2.11.7",
     "pydantic-ai>=0.8.1",
     "tqdm>=4.67.1",
@@ -45,12 +44,24 @@ Documentation = "https://github.com/dmitriiweb/airow"
 "Bug Tracker" = "https://github.com/dmitriiweb/airow/issues"
 
 [project.optional-dependencies]
+pandas = [
+    "pandas>=2.3.2",
+]
+polars = [
+    "polars>=1.32.3",
+]
+all = [
+    "pandas>=2.3.2",
+    "polars>=1.32.3",
+]
 dev = [
     "mypy>=1.17.1",
+    "pandas-stubs>=2.3.3.260113",
     "pytest>=8.4.2",
     "pytest-asyncio>=1.1.0",
     "pytest-cov>=6.3.0",
     "ruff>=0.12.12",
+    "types-tqdm>=4.68.0.20260608",
 ]
 
 [tool.setuptools.dynamic]

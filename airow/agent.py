@@ -1,17 +1,18 @@
 """Agent utilities for executing pydantic-ai models with structured outputs."""
 
-from typing import Iterable
+from typing import Any, Iterable
 
+from loguru import logger
 from pydantic import BaseModel, Field, create_model
 from pydantic_ai import Agent
 from pydantic_ai.models import Model
-from loguru import logger
 
 from . import schemas
 
 
 class AirowAgent:
     """Wrapper around `pydantic_ai.Agent` that builds structured output models."""
+
     def __init__(
         self,
         model: Model | str,
@@ -27,7 +28,9 @@ class AirowAgent:
         """
         self.model = model
         self.system_prompt = system_prompt
-        self.agent = Agent(model=model, system_prompt=self.system_prompt, retries=retries)
+        self.agent = Agent(
+            model=model, system_prompt=self.system_prompt, retries=retries
+        )
 
     async def run(
         self,
@@ -64,7 +67,7 @@ class AirowAgent:
         Returns:
             A dynamically created `BaseModel` subclass with fields per column.
         """
-        fields = {
+        fields: dict[str, Any] = {
             col.name: (col.type, Field(..., description=col.description))
             for col in output_columns
         }

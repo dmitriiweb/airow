@@ -3,8 +3,6 @@
 from dataclasses import dataclass
 from typing import Any, Type
 
-from pydantic import BaseModel
-
 
 @dataclass
 class OutputColumn:

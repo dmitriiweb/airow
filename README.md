@@ -2,7 +2,7 @@
 
 **AI-powered DataFrame processing made simple**
 
-Airow is a Python library that combines the power of pandas DataFrames with AI models to process structured data at scale. Built on top of `pydantic-ai`, it provides type-safe, async processing of DataFrames using any AI model.
+Airow is a Python library that combines pandas or Polars DataFrames with AI models to process structured data at scale. Built on top of `pydantic-ai`, it provides type-safe, async processing of DataFrames using any AI model.
 
 ## Features
 
@@ -17,14 +17,17 @@ Airow is a Python library that combines the power of pandas DataFrames with AI m
 ## Installation
 
 ```bash
-# Using pip
+# Core library without a DataFrame backend
 pip install airow
 
-# Using uv (recommended)
-uv add airow
+# pandas only
+pip install "airow[pandas]"
 
-# Using conda
-conda install -c conda-forge airow
+# Polars only
+pip install "airow[polars]"
+
+# pandas and Polars
+pip install "airow[all]"
 ```
 
 ## Quick Start
@@ -75,3 +78,20 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
 ```
+
+The same API accepts an eager Polars DataFrame and returns a Polars DataFrame:
+
+```python
+import polars as pl
+
+df = pl.read_csv("wine_data.csv")
+result_df = await airow.run(
+    df,
+    prompt="Analyze the wine description.",
+    input_columns=["description"],
+    output_columns=output_columns,
+)
+```
+
+Custom dataframe implementations can subclass `DataFrameBackend` and pass an
+instance as `Airow(..., backend=my_backend)`.
