@@ -30,68 +30,148 @@ pip install "airow[polars]"
 pip install "airow[all]"
 ```
 
-## Quick Start
+## Pandas example
+
+Install Airow with the pandas backend:
+
+```bash
+pip install "airow[pandas]"
+```
+
+The examples use Pydantic AI's `openai:gpt-5` model string, so configure the
+corresponding provider credentials before running them.
 
 ```python
-import pandas as pd
-from pydantic_ai.models.openai import OpenAIChatModel
-from pydantic_ai.providers.ollama import OllamaProvider
-from airow import Airow, OutputColumn
 import asyncio
 
+import pandas as pd
+
+from airow import Airow, OutputColumn
+
+
 async def main():
-    # Setup your AI model
-    model = OpenAIChatModel(
-        model_name="llama3.2:latest",
-        provider=OllamaProvider(base_url="http://localhost:11434/v1"),
+    df = pd.DataFrame(
+        {
+            "description": [
+                "Bright citrus flavors with a crisp finish.",
+                "Rich dark fruit with firm tannins.",
+            ]
+        }
     )
-    # or use strings:
-    model = "openai:gpt-5"
-    model = "anthropic:claude-sonnet-4-0"
-    
-    # Create Airow instance
+
     airow = Airow(
-        model=model,
+        model="openai:gpt-5",
         system_prompt="You are an expert in wine tasting and selection.",
+        batch_size=2,
     )
-    
-    # Load your data
-    df = pd.read_csv("wine_data.csv")
 
     output_columns = [
-        OutputColumn(name="sentiment", type=str, description="Positive, negative, or neutral sentiment"),
-        OutputColumn(name="confidence", type=float, description="Confidence score between 0 and 1"),
-        OutputColumn(name="keywords", type=list, description="List of key terms extracted"),
+        OutputColumn(
+            name="summary",
+            type=str,
+            description="A concise summary of the wine",
+        ),
+        OutputColumn(
+            name="style",
+            type=str,
+            description="The inferred wine style",
+        ),
     ]
-    
-    # Process with AI
+
     result_df = await airow.run(
         df,
-        prompt="Analyze the wine description and provide sentiment analysis, confidence score, and extract key terms.",
+        prompt="Analyze this wine description.",
         input_columns=["description"],
         output_columns=output_columns,
         show_progress=True,
     )
-    
+
+    # result_df is a pandas.DataFrame; df is unchanged.
     print(result_df.head())
+
 
 if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-The same API accepts an eager Polars DataFrame and returns a Polars DataFrame:
+Airow detects pandas automatically and returns a new `pandas.DataFrame`.
 
-```python
-import polars as pl
+## Polars example
 
-df = pl.read_csv("wine_data.csv")
-result_df = await airow.run(
-    df,
-    prompt="Analyze the wine description.",
-    input_columns=["description"],
-    output_columns=output_columns,
-)
+Install Airow with the Polars backend:
+
+```bash
+pip install "airow[polars]"
 ```
 
+```python
+import asyncio
+
+import polars as pl
+
+from airow import Airow, OutputColumn
+
+
+async def main():
+    df = pl.DataFrame(
+        {
+            "description": [
+                "Bright citrus flavors with a crisp finish.",
+                "Rich dark fruit with firm tannins.",
+            ]
+        }
+    )
+
+    airow = Airow(
+        model="openai:gpt-5",
+        system_prompt="You are an expert in wine tasting and selection.",
+        batch_size=2,
+    )
+
+    output_columns = [
+        OutputColumn(
+            name="summary",
+            type=str,
+            description="A concise summary of the wine",
+        ),
+        OutputColumn(
+            name="style",
+            type=str,
+            description="The inferred wine style",
+        ),
+    ]
+
+    result_df = await airow.run(
+        df,
+        prompt="Analyze this wine description.",
+        input_columns=["description"],
+        output_columns=output_columns,
+        show_progress=True,
+    )
+
+    # result_df is a polars.DataFrame; df is unchanged.
+    print(result_df.head())
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+Airow detects eager Polars DataFrames automatically and returns a new
+`polars.DataFrame`. LazyFrames are not currently supported.
+
+## Custom backends
+
 Custom dataframe implementations can subclass `DataFrameBackend` and pass an
-instance as `Airow(..., backend=my_backend)`.
+instance explicitly:
+
+```python
+from airow import Airow, DataFrameBackend
+
+backend: DataFrameBackend = MyDataFrameBackend()
+airow = Airow(
+    model="openai:gpt-5",
+    system_prompt="You are a data processing assistant.",
+    backend=backend,
+)
+```
