@@ -1,0 +1,172 @@
+name: Publish to PyPI
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pypi-publish
+  cancel-in-progress: false
+
+jobs:
+  detect_release:
+    name: Detect new package version
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      should_publish: ${{ steps.release.outputs.should_publish }}
+      version: ${{ steps.release.outputs.version }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Detect unpublished version
+        id: release
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          python - <<'PY'
+          import ast
+          import os
+          import subprocess
+          import tomllib
+          import urllib.error
+          import urllib.request
+          from pathlib import Path
+
+
+          def project_version(contents: bytes) -> str:
+              return tomllib.loads(contents.decode())["project"]["version"]
+
+
+          def package_version() -> str:
+              module = ast.parse(Path("airow/__init__.py").read_text())
+              for statement in module.body:
+                  if isinstance(statement, ast.Assign):
+                      if any(
+                          isinstance(target, ast.Name) and target.id == "__version__"
+                          for target in statement.targets
+                      ):
+                          return ast.literal_eval(statement.value)
+              raise RuntimeError("airow.__version__ is not defined")
+
+
+          current_version = project_version(Path("pyproject.toml").read_bytes())
+          if package_version() != current_version:
+              raise RuntimeError(
+                  "pyproject.toml project.version and airow.__version__ must match"
+              )
+
+          before_sha = os.environ["BEFORE_SHA"]
+          previous_version = None
+          if before_sha and set(before_sha) != {"0"}:
+              try:
+                  previous_pyproject = subprocess.check_output(
+                      ["git", "show", f"{before_sha}:pyproject.toml"]
+                  )
+                  previous_version = project_version(previous_pyproject)
+              except subprocess.CalledProcessError:
+                  pass
+
+          output_path = Path(os.environ["GITHUB_OUTPUT"])
+          output_path.write_text(
+              f"version={current_version}\nshould_publish=false\n"
+          )
+
+          if current_version == previous_version:
+              print(f"Version remains {current_version}; nothing to publish.")
+              raise SystemExit
+
+          package_url = f"https://pypi.org/pypi/airow/{current_version}/json"
+          try:
+              with urllib.request.urlopen(package_url, timeout=15) as response:
+                  if response.status == 200:
+                      print(
+                          f"airow {current_version} already exists on PyPI; "
+                          "nothing to publish."
+                      )
+                      raise SystemExit
+          except urllib.error.HTTPError as error:
+              if error.code != 404:
+                  raise
+
+          with output_path.open("a") as output:
+              output.write("should_publish=true\n")
+          print(f"airow {current_version} is ready to publish.")
+          PY
+
+  build:
+    name: Test and build distributions
+    needs: detect_release
+    if: needs.detect_release.outputs.should_publish == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install locked dependencies
+        run: uv sync --locked --all-extras
+
+      - name: Run offline test suite
+        run: uv run pytest -q
+
+      - name: Build wheel and source distribution
+        run: uv build
+
+      - name: Upload distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-dists
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publish distributions
+    needs:
+      - detect_release
+      - build
+    if: needs.detect_release.outputs.should_publish == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: pypi
+      url: https://pypi.org/project/airow/${{ needs.detect_release.outputs.version }}/
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Download distributions
+        uses: actions/download-artifact@v5
+        with:
+          name: release-dists
+          path: dist/
+
+      - name: Publish distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
