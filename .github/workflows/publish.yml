@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -47,12 +48,12 @@ jobs:
           from pathlib import Path
 
 
-          def project_version(contents: bytes) -> str:
-              return tomllib.loads(contents.decode())["project"]["version"]
+          def project_version(contents: bytes) -> str | None:
+              return tomllib.loads(contents.decode())["project"].get("version")
 
 
-          def package_version() -> str:
-              module = ast.parse(Path("airow/__init__.py").read_text())
+          def package_version(contents: str) -> str:
+              module = ast.parse(contents)
               for statement in module.body:
                   if isinstance(statement, ast.Assign):
                       if any(
@@ -63,8 +64,13 @@ jobs:
               raise RuntimeError("airow.__version__ is not defined")
 
 
+          current_package_version = package_version(
+              Path("airow/__init__.py").read_text()
+          )
           current_version = project_version(Path("pyproject.toml").read_bytes())
-          if package_version() != current_version:
+          if current_version is None:
+              current_version = current_package_version
+          elif current_package_version != current_version:
               raise RuntimeError(
                   "pyproject.toml project.version and airow.__version__ must match"
               )
@@ -77,15 +83,25 @@ jobs:
                       ["git", "show", f"{before_sha}:pyproject.toml"]
                   )
                   previous_version = project_version(previous_pyproject)
+                  if previous_version is None:
+                      previous_module = subprocess.check_output(
+                          ["git", "show", f"{before_sha}:airow/__init__.py"]
+                      )
+                      previous_version = package_version(previous_module.decode())
               except subprocess.CalledProcessError:
                   pass
 
           output_path = Path(os.environ["GITHUB_OUTPUT"])
-          output_path.write_text(
-              f"version={current_version}\nshould_publish=false\n"
-          )
+
+
+          def write_outputs(*, should_publish: bool) -> None:
+              output_path.write_text(
+                  f"version={current_version}\n"
+                  f"should_publish={str(should_publish).lower()}\n"
+              )
 
           if current_version == previous_version:
+              write_outputs(should_publish=False)
               print(f"Version remains {current_version}; nothing to publish.")
               raise SystemExit
 
@@ -97,13 +113,13 @@ jobs:
                           f"airow {current_version} already exists on PyPI; "
                           "nothing to publish."
                       )
+                      write_outputs(should_publish=False)
                       raise SystemExit
           except urllib.error.HTTPError as error:
               if error.code != 404:
                   raise
 
-          with output_path.open("a") as output:
-              output.write("should_publish=true\n")
+          write_outputs(should_publish=True)
           print(f"airow {current_version} is ready to publish.")
           PY
 
