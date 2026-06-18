@@ -1,6 +1,6 @@
 [project]
 name = "airow"
-dynamic = ["version"]
+version = "0.2.0"
 description = "AI-powered DataFrame processing made simple"
 readme = "README.md"
 license = {text = "MIT"}
@@ -63,9 +63,6 @@ dev = [
     "ruff>=0.12.12",
     "types-tqdm>=4.68.0.20260608",
 ]
-
-[tool.setuptools.dynamic]
-version = {attr = "airow.__version__"}
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

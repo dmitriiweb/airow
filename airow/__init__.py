@@ -4,7 +4,7 @@ Exposes `Airow` for batched, row-wise LLM inference over DataFrames and
 `OutputColumn` for declaring structured outputs.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 from .airow import Airow
 from .backends import DataFrameBackend, PandasBackend, PolarsBackend
